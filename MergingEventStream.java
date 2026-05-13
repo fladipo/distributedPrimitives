@@ -3,10 +3,13 @@ package DistributedPrimitives;
 import java.util.*;
 
 /**
- * A memory-efficient event aggregator that merges multiple chronological streams into a single globally sorted consumer.
+ * A memory-efficient event aggregator that merges multiple chronological
+ * streams into a single globally sorted consumer.
  * 
- * Implementation: Use a min-heap (PriorityQueue) to ensure that the heap size scales with the number of producers (k), not the
- * total volume of events (N). This ensures a fixed memory footprint regardless of stream duration.
+ * Implementation: Use a min-heap (PriorityQueue) to ensure that the heap size
+ * scales with the number of producers (k), not the
+ * total volume of events (N). This ensures a fixed memory footprint regardless
+ * of stream duration.
  */
 public class MergingEventStream implements Iterator<MergingEventStream.Event> {
     public static class Event {
@@ -34,17 +37,19 @@ public class MergingEventStream implements Iterator<MergingEventStream.Event> {
     private final PriorityQueue<ProducerNode> mergedStream;
 
     /**
-     * Initializes the aggregator with k sorted event streams. 
+     * Initializes the aggregator with k sorted event streams.
+     * 
      * @param producers
      */
     public MergingEventStream(List<Iterator<Event>> producers) {
-  
-        this.mergedStream = new PriorityQueue<>(Math.max(1, producers.size()), (a,b) -> Long.compare(a.event.timestamp, b.event.timestamp));
+
+        this.mergedStream = new PriorityQueue<>(Math.max(1, producers.size()),
+                (a, b) -> Long.compare(a.event.timestamp, b.event.timestamp));
 
         for (Iterator<Event> it : producers) {
             if (it != null && it.hasNext()) {
                 Event firstEvent = it.next();
-                if (firstEvent != null)  {
+                if (firstEvent != null) {
                     mergedStream.offer(new ProducerNode(firstEvent, it));
                 }
             }
@@ -64,7 +69,8 @@ public class MergingEventStream implements Iterator<MergingEventStream.Event> {
      */
     @Override
     public Event next() {
-        if (!hasNext()) throw new NoSuchElementException();
+        if (!hasNext())
+            throw new NoSuchElementException();
 
         // Get the next smallest element
         ProducerNode smallestElement = mergedStream.poll();
@@ -79,19 +85,19 @@ public class MergingEventStream implements Iterator<MergingEventStream.Event> {
     public static void main(String[] args) {
         // Create the list of producers
         Iterator<Event> producer1 = List.of(
-            new Event(1, "id1", "data"), 
-            new Event(3, "id3", "data")).iterator();
+                new Event(1, "id1", "data"),
+                new Event(3, "id3", "data")).iterator();
 
         Iterator<Event> producer2 = List.of(
-            new Event(2, "id2", "data"), 
-            new Event(4, "id4", "data")).iterator();
+                new Event(2, "id2", "data"),
+                new Event(4, "id4", "data")).iterator();
 
         List<Iterator<Event>> producers = List.of(producer1, producer2);
         MergingEventStream aggregator = new MergingEventStream(producers);
 
-        while(aggregator.hasNext()) {
+        while (aggregator.hasNext()) {
             Event event = aggregator.next();
-            System.out.println("The timestamp is " +  event.timestamp + " for " + event.id);
+            System.out.println("The timestamp is " + event.timestamp + " for " + event.id);
         }
     }
 }
