@@ -77,7 +77,7 @@ public class ConcurrentFileBuffer {
     // without acquiring any locks. So Write() acquires a lock and calls
     // internalFlush if full.
     private void internalFlush() {
-        if (position != maxCapacity)
+        if (position == 0)
             return;
 
         // Simulate disk I/O
